@@ -1,5 +1,5 @@
 # Probability and Statistics
-
+:label:`chapter_prob`
 
 In some form or another, machine learning is all about making predictions.
 We might want to predict the *probability* of a patient suffering a heart attack in the next year, given their clinical history. In anomaly detection, we might want to assess how *likely* a set of readings from an airplane's jet engine would be, were it operating normally. In reinforcement learning, we want an agent to act intelligently in an environment. This means we need to think about the probability of getting a high reward under each of the available action. And when we build recommender systems we also need to think about probability. For example, say *hypothetically* that worked for a large online bookseller. We might want to estimate the probability that a particular user would buy a particular book. For this we need to use the language of probability and statistics. Entire courses, majors, theses, careers, and even departments, are devoted to probability. So naturally, our goal in this section isn't to teach the whole subject. Instead we hope to get you off the ground, to teach you just enough that you can start building your first machine
@@ -8,11 +8,11 @@ learning models, and to give you enough of a flavor for the subject that you can
 
 We've already invoked probabilities in previous sections without articulating what precisely they are or giving a concrete example. Let's get more serious now by considering the problem of distinguishing cats and dogs based on photographs. This might sound simple but it's actually a formidable challenge. To start with, the difficulty of the problem may depend on the resolution of the image.
 
-| 10px | 20px | 40px
-| 80px | 160px |
+| 10px | 20px | 40px | 80px | 160px |
 |:----:|:----:|:----:|:----:|:-----:|
 |![](../img/whitecat10.jpg)|![](../img/whitecat20.jpg)|![](../img/whitecat40.jpg)|![](../img/whitecat80.jpg)|![](../img/whitecat160.jpg)|
 |![](../img/whitedog10.jpg)|![](../img/whitedog20.jpg)|![](../img/whitedog40.jpg)|![](../img/whitedog80.jpg)|![](../img/whitedog160.jpg)|
+
 While it's easy for humans to recognize cats and dogs at 320 pixel resolution,
 it becomes challenging at 40 pixels and next to impossible at 10 pixels. In
 other words, our ability to tell cats and dogs apart at a large distance (and thus low resolution) might approach uninformed guessing. Probability gives us a
@@ -167,7 +167,7 @@ and denote it by $\Pr(B | A)$, the probability that $B$ happens, provided that
 $A$ has happened.
 
 Using the definition of conditional probabilities, we can derive one of the most useful and celebrated equations in statistics—Bayes' theorem.
-It goes as follows: By construction, we have that $\Pr(A, B) = \Pr(B | A) \Pr(A)$. By symmetry, this also holds for $\Pr(A,B) = \Pr(A | B) \Pr(B)$. Solving for one of the conditional variables we get: 
+It goes as follows: By construction, we have that $\Pr(A, B) = \Pr(B | A) \Pr(A)$. By symmetry, this also holds for $\Pr(A,B) = \Pr(A | B) \Pr(B)$. Solving for one of the conditional variables we get:
 
 $$\Pr(A | B) = \frac{\Pr(B | A) \Pr(A)}{\Pr(B)}$$
 
@@ -177,16 +177,14 @@ $$\Pr(A) = \sum_{B'} \Pr(A,B') \text{ and
 } \Pr(B) = \sum_{A'} \Pr(A',B)$$
 
 Another useful property to check for is **dependence** vs. **independence**.
-Independence is when the occurrence of one event does not reveal any information about the occurrence of the other. In this case $\Pr(B | A) = \Pr(B)$. Statisticians typically exress this as $A \perp\!\!\!\perp B$. From Bayes' Theorem, it follows immediately that also $\Pr(A | B) = \Pr(A)$. In all other cases we call $A$ and $B$ dependent. For instance, two successive rolls of a die are independent. On the other hand, the position of a light switch and the brightness in the room are not (they are not perfectly deterministic, though, since we could always have a broken lightbulb, power failure, or a broken switch).
+Independence is when the occurrence of one event does not reveal any information about the occurrence of the other. In this case $\Pr(B | A) = \Pr(B)$. Statisticians typically express this as $A \perp\!\!\!\perp B$. From Bayes' Theorem, it follows immediately that also $\Pr(A | B) = \Pr(A)$. In all other cases we call $A$ and $B$ dependent. For instance, two successive rolls of a die are independent. On the other hand, the position of a light switch and the brightness in the room are not (they are not perfectly deterministic, though, since we could always have a broken lightbulb, power failure, or a broken switch).
 
 Let's put our skills to the test. Assume that a doctor administers an AIDS test to a patient. This test is fairly accurate and it fails only with 1% probability if the patient is healthy by reporting him as diseased. Moreover,
 it never fails to detect HIV if the patient actually has it. We use $D$ to indicate the diagnosis and $H$ to denote the HIV status. Written as a table the outcome $\Pr(D | H)$ looks as follows:
 
-|
-outcome| HIV positive | HIV negative |
+|outcome| HIV positive | HIV negative |
 |:------------|-------------:|-------------:|
-|Test positive|            1 |
-0.01 |
+|Test positive|            1 |         0.01 |
 |Test negative|            0 |         0.99 |
 
 Note that the column sums are all one (but the row sums aren't), since the conditional probability needs to sum up to $1$, just like the probability. Let us work out the probability of the patient having AIDS if the test comes back positive. Obviously this is going to depend on how common the disease is, since it affects the number of false alarms. Assume that the population is quite healthy, e.g. $\Pr(\text{HIV positive}) = 0.0015$. To apply Bayes' Theorem, we need to determine
@@ -209,11 +207,9 @@ What should a patient do upon receiving such terrifying news? Likely, he/she
 would ask the physician to administer another test to get clarity. The second
 test has different characteristics (it isn't as good as the first one).
 
-|
-outcome |  HIV positive |  HIV negative |
+|outcome |  HIV positive |  HIV negative |
 |:------------|--------------:|--------------:|
-|Test positive|          0.98 |
-0.03 |
+|Test positive|          0.98 |          0.03 |
 |Test negative|          0.02 |          0.97 |
 
 Unfortunately, the second test comes back positive, too. Let us work out the requisite probabilities to invoke Bayes' Theorem.
@@ -254,7 +250,7 @@ counts = np.zeros(100)
 fig, axes = plt.subplots(2, 3, figsize=(15, 8), sharex=True)
 axes = axes.reshape(6)
 # Mangle subplots such that we can index them in a linear fashion rather than
-# a 2d grid
+# a 2D grid
 for i in range(1, 1000001):
     counts[random.randint(0, 99)] += 1
     if i in [10, 100, 1000, 10000, 100000, 1000000]:
@@ -283,6 +279,8 @@ p1 = np.cumsum(y >= 0.35) / x
 plt.figure(figsize=(15, 8))
 plt.semilogx(x, p0)
 plt.semilogx(x, p1)
+plt.axhline(y=0.35, color='black', linestyle='dashed')
+plt.axhline(y=0.65, color='black', linestyle='dashed')
 plt.show()
 ```
 
@@ -380,6 +378,7 @@ So far, we covered probabilities, independence, conditional independence, and ho
 1. Assume that we have a sequence of events, say $A$, $B$ and $C$, where $B$ only depends on $A$ and $C$ only on $B$, can you simplify the joint probability? Hint - this is a [Markov Chain](https://en.wikipedia.org/wiki/Markov_chain).
 
 ## Scan the QR Code to
+
 [Discuss](https://discuss.mxnet.io/t/2319)
 
-![](../img/qr_probability.svg)
+![qr](../img/qr_probability.svg)

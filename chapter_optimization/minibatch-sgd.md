@@ -1,4 +1,5 @@
 # Mini-batch Stochastic Gradient Descent
+:label:`chapter_minibatch_sgd`
 
 In each iteration, the gradient descent uses the entire training data set to compute the gradient, so it is sometimes referred to as batch gradient descent. Stochastic gradient descent (SGD) only randomly select one example in each iteration to compute the gradient. Just like in the previous chapters, we can perform random uniform sampling for each iteration to form a mini-batch and then use this mini-batch to compute the gradient. Now, we are going to discuss mini-batch stochastic gradient descent.
 
@@ -19,6 +20,10 @@ The cost for computing each iteration is $\mathcal{O}(|\mathcal{B}|)$. When the 
 ## Reading Data
 
 In this chapter, we will use a data set developed by NASA to test the wing noise from different aircraft to compare these optimization algorithms[1]. We will use the first 1500 examples of the data set, 5 features, and a normalization method to preprocess the data.
+
+```{.python .input}
+#!pip install matplotlib
+```
 
 ```{.python .input  n=1}
 import sys
@@ -43,9 +48,16 @@ features.shape
 
 ## Implementation from Scratch
 
-We have already implemented the mini-batch SGD algorithm in the [Linear Regression Implemented From Scratch](../chapter_deep-learning-basics/linear-regression-scratch.md) section. We have made its input parameters more generic here, so that we can conveniently use the same input for the other optimization algorithms introduced later in this chapter. Specifically, we add the status input `states` and place the hyper-parameter in dictionary `hyperparams`. In addition, we will average the loss of each mini-batch example in the training function, so the gradient in the optimization algorithm does not need to be divided by the batch size.
+We have already implemented the mini-batch SGD algorithm in the
+:numref:`chapter_linear_scratch`. We have made its input parameters more generic
+here, so that we can conveniently use the same input for the other optimization
+algorithms introduced later in this chapter. Specifically, we add the status
+input `states` and place the hyper-parameter in dictionary `hyperparams`. In
+addition, we will average the loss of each mini-batch example in the training
+function, so the gradient in the optimization algorithm does not need to be
+divided by the batch size.
 
-```{.python .input  n=3}
+```{.python .input  n=2}
 def sgd(params, states, hyperparams):
     for p in params:
         p[:] -= hyperparams['lr'] * p.grad
@@ -53,7 +65,7 @@ def sgd(params, states, hyperparams):
 
 Next, we are going to implement a generic training function to facilitate the use of the other optimization algorithms introduced later in this chapter. It initializes a linear regression model and can then be used to train the model with the mini-batch SGD and other algorithms introduced in subsequent sections.
 
-```{.python .input  n=4}
+```{.python .input  n=29}
 # This function is saved in the d2l package for future use
 def train_ch7(trainer_fn, states, hyperparams, features, labels,
               batch_size=10, num_epochs=2):
@@ -67,58 +79,82 @@ def train_ch7(trainer_fn, states, hyperparams, features, labels,
     def eval_loss():
         return loss(net(features, w, b), labels).mean().asscalar()
 
-    ls = [eval_loss()]
+    ls, ts = [eval_loss()], [0,]
     data_iter = gdata.DataLoader(
         gdata.ArrayDataset(features, labels), batch_size, shuffle=True)
+    start = time.time()
     for _ in range(num_epochs):
-        start = time.time()
         for batch_i, (X, y) in enumerate(data_iter):
             with autograd.record():
                 l = loss(net(X, w, b), y).mean()  # Average the loss
             l.backward()
             # Update model parameters
             trainer_fn([w, b], states, hyperparams)
-            if (batch_i + 1) * batch_size % 100 == 0:
-                # Record the current training error for every 100 examples
+            if (batch_i + 1) * batch_size % 10 == 0:
+                # Record the current training error for every 10 examples
+                ts.append(time.time() - start + ts[-1])
                 ls.append(eval_loss())
+                start = time.time()
+
     # Print and plot the results.
-    print('loss: %f, %f sec per epoch' % (ls[-1], time.time() - start))
+    print('loss: %f, %f sec per epoch' % (ls[-1], ts[-1]/num_epochs))
     d2l.set_figsize()
     d2l.plt.plot(np.linspace(0, num_epochs, len(ls)), ls)
     d2l.plt.xlabel('epoch')
     d2l.plt.ylabel('loss')
+    return ts, ls
 ```
 
 When the batch size equals 1500 (the total number of examples), we use gradient descent for optimization. The model parameters will be iterated only once for each epoch of the gradient descent. As we can see, the downward trend of the value of the objective function (training loss) flattened out after 6 iterations.
 
-```{.python .input  n=5}
+```{.python .input  n=30}
 def train_sgd(lr, batch_size, num_epochs=2):
-    train_ch7(sgd, None, {'lr': lr}, features, labels, batch_size, num_epochs)
+    return train_ch7(
+        sgd, None, {'lr': lr}, features, labels, batch_size, num_epochs)
 
-train_sgd(1, 1500, 6)
+gd_res = train_sgd(1, 1500, 6)
 ```
 
 When the batch size equals 1, we use SGD for optimization. In order to simplify the implementation, we did not self-decay the learning rate. Instead, we simply used a small constant for the learning rate in the (mini-batch) SGD experiment. In SGD, the independent variable (model parameter) is updated whenever an example is processed. Thus it is updated 1500 times in one epoch. As we can see, the decline in the value of the objective function slows down after one epoch.
 
 Although both the procedures processed 1500 examples within one epoch, SGD consumes more time than gradient descent in our experiment. This is because SGD performed more iterations on the independent variable within one epoch, and it is harder for single-example gradient computation to use parallel computing effectively.
 
-```{.python .input  n=6}
-train_sgd(0.005, 1)
+```{.python .input  n=5}
+sgd_res = train_sgd(0.005, 1)
 ```
 
-When the batch size equals 10, we use mini-batch SGD for optimization. The time required for one epoch is between the time needed for gradient descent and SGD to complete the same epoch.
+When the batch size equals 100, we use mini-batch SGD for optimization. The time required for one epoch is between the time needed for gradient descent and SGD to complete the same epoch.
 
-```{.python .input  n=7}
-train_sgd(0.05, 10)
+```{.python .input  n=37}
+mini1_res = train_sgd(.4, 100)
+```
+
+Reduce the batch size to 10, the time for each epoch increases because the workload for each batch is less efficient to execute.
+
+```{.python .input  n=38}
+mini2_res = train_sgd(.05, 10)
+```
+
+Finally, we compare the time versus loss for the preview four experiments. As can be seen, despite SGD converges faster than GD in terms of number of examples processed, it uses more time to reach the same loss than GD because that computing gradient example by example is not efficient. Mini-batch SGD is able to trade-off the convergence speed and computation efficiency. Here, a batch size 10 improves SGD, and a batch size 100 even outperforms GD.
+
+```{.python .input  n=40}
+d2l.set_figsize([6, 3])
+for res in [gd_res, sgd_res, mini1_res, mini2_res]:
+    d2l.plt.plot(res[0], res[1])
+d2l.plt.xlabel('time (sec)')
+d2l.plt.ylabel('loss')
+d2l.plt.xscale('log')
+d2l.plt.xlim([1e-3, 1])
+d2l.plt.legend(['gd', 'sgd', 'batch size=100', 'batch size=10']);
 ```
 
 ## Concise Implementation
 
 In Gluon, we can use the `Trainer` class to call optimization algorithms. Next, we are going to implement a generic training function that uses the optimization name `trainer name` and hyperparameter `trainer_hyperparameter` to create the instance `Trainer`.
 
-```{.python .input  n=8}
+```{.python .input  n=9}
 # This function is saved in the d2l package for future use
-def train_gluon_ch7(trainer_name, trainer_hyperparams, features, labels,
+def train_gluon_ch9(trainer_name, trainer_hyperparams, features, labels,
                     batch_size=10, num_epochs=2):
     # Initialize model parameters
     net = nn.Sequential()
@@ -155,8 +191,8 @@ def train_gluon_ch7(trainer_name, trainer_hyperparams, features, labels,
 
 Use Gluon to repeat the last experiment.
 
-```{.python .input  n=9}
-train_gluon_ch7('sgd', {'learning_rate': 0.05}, features, labels, 10)
+```{.python .input  n=10}
+train_gluon_ch9('sgd', {'learning_rate': 0.05}, features, labels, 10)
 ```
 
 ## Summary

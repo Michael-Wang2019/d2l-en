@@ -1,6 +1,6 @@
 # Semantic Segmentation and Data Sets
 
-In our discussion of object detection issues in the previous sections, we only used rectangular bounding boxes to label and predict objects in images. In this section, we will look at semantic segmentation, which attempts to segment images into regions with different semantic categories. These semantic regions label and predict objects at the pixel level. Figure 9.10 shows a semantically-segmented image, with areas labeled "dog", "cat", and "background". As you can see, compared to object detection, semantic segmentation labels areas with pixel-level borders, for significantly greater precision.
+In our discussion of object detection issues in the previous sections, we only used rectangular bounding boxes to label and predict objects in images. In this section, we will look at semantic segmentation, which attempts to segment images into regions with different semantic categories. These semantic regions label and predict objects at the pixel level. Figure 11.10 shows a semantically-segmented image, with areas labeled "dog", "cat", and "background". As you can see, compared to object detection, semantic segmentation labels areas with pixel-level borders, for significantly greater precision.
 
 ![Semantically-segmented image, with areas labeled "dog", "cat", and "background". ](../img/segmentation.svg)
 
@@ -204,7 +204,7 @@ for X, Y in train_iter:
 
 ## Exercises
 
-* Recall the content we covered in the ["Image Augmentation"](image-augmentation.md) section. Which of the image augmentation methods used in image classification would be hard to use in semantic segmentation?
+* Recall the content we covered in :numref:`chapter_image_augmentation`. Which of the image augmentation methods used in image classification would be hard to use in semantic segmentation?
 
 ##  Reference
 
